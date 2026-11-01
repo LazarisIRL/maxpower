@@ -2,15 +2,16 @@
 
 #optionally set the time to run. 300s by default
 T=${1:-300}
+[[ $T =~ ^[0-9]+$ ]] || { echo "Usage: $0 [seconds]"; exit 1; }
 #directory where the gpu-burn program can be found. Looks in the same directory by default
 GPU_BURN_DIR=${GPU_BURN_DIR:-$(dirname "$(realpath "$0")")/gpu-burn}
 #quick check if gpu-burn is not present
-[[ -x $GPU_BURN_DIR/gpu_burn ]] || { echo "gpu_burn not found in $GPU_BURN_DIR. Move it there there or run: sudo GPU_BURN_DIR=/path/to/gpu-burn $0"; exit 1; }
+[[ -x $GPU_BURN_DIR/gpu_burn ]] || { echo "gpu_burn not found in $GPU_BURN_DIR. Move it there or run: sudo GPU_BURN_DIR=/path/to/gpu-burn $0"; exit 1; }
 RAPL=/sys/class/powercap/intel-rapl:0/energy_uj
-LOG=/tmp/gpu_burn.log
+LOG=$(mktemp)
 
 #ctrl+c to stop
-trap 'trap - TERM; kill 0' INT TERM
+trap 'rm -f "$LOG"; trap - TERM; kill 0' INT TERM
 
 # CPU + RAM load:
 #   --cpu 0                 one worker per CPU thread (0 = all of them)
@@ -44,4 +45,5 @@ wait
 
 echo
 # Convert the log to a more readable format
-echo "GPU: $(tr '\r' '\n' < "$LOG" | grep -o '[0-9]* Gflop/s' | tail -1), $(grep -o 'GPU 0: [A-Z]*' "$LOG")"
+echo "GPU: $(tr '\r' '\n' < "$LOG" | grep -o '[0-9]* Gflop/s' | tail -1), $(grep -oE 'GPU 0: (OK|FAULTY)' "$LOG")"
+rm -f "$LOG"
