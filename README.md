@@ -35,3 +35,20 @@ sudo ./maxpower.sh 300`
 ## Usage 
 
 Must be run with ```sudo``` or it will not print out CPU power use (RAPL is a kernel level feature which requires ```sudo```)
+
+```bash
+sudo ./maxpower.sh [seconds]
+```
+
+| Argument | Default | Description |
+|---|---|---|
+| `seconds` | `300` | How long to run the load for |
+
+Press **Ctrl+C** to stop early. This stops both the CPU and GPU load.
+
+By default the script looks for gpu-burn in a `gpu-burn` folder next to `maxpower.sh`.
+If yours is somewhere else, set `GPU_BURN_DIR`:
+
+```bash
+sudo GPU_BURN_DIR=/path/to/gpu-burn ./maxpower.sh
+```
